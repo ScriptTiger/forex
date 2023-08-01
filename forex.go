@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/http"
@@ -48,9 +49,9 @@ func query(rest bool, base *string, quote *string, decimal *string, thousands *s
 	// Extract element containing rate from response string
 	match := pattern.Find(responseString)
 	if match == nil {
-		if !rest {
-			return nil, errors.New("Pair not found")
-		}
+		if bytes.Contains(responseString, []byte("Our systems have detected unusual traffic from your computer network.")) {
+			return nil, errors.New("The IP address of this forex instance has been flagged by Google for unusual traffic.\nPlease wait for the cool-down period and try again.")
+		} else {return nil, errors.New("Pair not found")}
 	}
 
 	// Extract rate from element
