@@ -29,8 +29,8 @@ var pattern, _ = regexp.Compile("<div><div class=\"BNeawe iBp4i AP7Wnd\"><div><d
 func query(rest bool, base *string, quote *string, decimal *string, thousands *string) (*string, error) {
 
 	// URL encode white space
-	*base = strings.ReplaceAll(strings.ReplaceAll(*base, " ", "%20"), "	", "%20")
-	*quote = strings.ReplaceAll(strings.ReplaceAll(*quote, " ", "%20"), "	", "%20")
+	*base = strings.ReplaceAll(strings.ReplaceAll(*base, " ", "+"), "	", "+")
+	*quote = strings.ReplaceAll(strings.ReplaceAll(*quote, " ", "+"), "	", "+")
 
 	// Send GET request to query Google for pair
 	response, err := http.Get("https://www.google.com/search?q="+*base+"/"+*quote+"&hl=en")
