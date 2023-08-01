@@ -13,7 +13,7 @@ Argument                  | Description
  `-thousands <separator>` | Thousands seperator
  `-rest <address:port>`   | Start REST API on given socket
 
-**This tool scrapes from a standard Google web search, and as such will get flagged as "unusual traffic" if it is used cyclically in rapid succession. The intent of this tool is for personal use only, to simply to aid with certain one-off daily tasks, and should not be used in place of non-free Google API access.**
+**This tool scrapes from a standard Google web search, and as such will get flagged as "unusual traffic" if it is used cyclically in rapid succession. The intent of this tool is for personal use only, to simply aid with certain one-off daily tasks, and should not be used in place of non-free Google API access.**
 
 If `decimal` and `thousands` separators are not defined, a dot (".") will be used for decimal separators and no thousands separator will be used.
 
