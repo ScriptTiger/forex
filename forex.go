@@ -16,8 +16,10 @@ func help(err int) {
 		"Usage: forex [options...]\n"+
 		" [-base] <base>         Base currency\n"+
 		" [-quote] <quote>       Quote currency\n"+
-		" -decimal <separator>   Decimal separator\n"+
-		" -thousands <separator> Thousands seperator\n"+
+		" -idecimal <separator>   Input decimal separator\n"+
+		" -ithousands <separator> Input thousands seperator\n"+
+		" -odecimal <separator>   Output decimal separator\n"+
+		" -othousands <separator> Output thousands seperator\n"+
 		" -rest <address:port>   Start REST API on given socket\n")
 	os.Exit(err)
 }
@@ -26,7 +28,7 @@ func help(err int) {
 var pattern, _ = regexp.Compile("<div><div class=\"BNeawe iBp4i AP7Wnd\"><div><div class=\"BNeawe iBp4i AP7Wnd\">.*</div></div></div></div></div><div class=\"nXE3Ob\">")
 
 // Query for pair
-func query(rest bool, base *string, quote *string, decimal *string, thousands *string) (*string, error) {
+func query(rest bool, base *string, quote *string, idecimal *string, ithousands *string, odecimal *string, othousands *string) (*string, error) {
 
 	// URL encode white space
 	*base = strings.ReplaceAll(strings.ReplaceAll(*base, " ", "+"), "	", "+")
@@ -54,16 +56,28 @@ func query(rest bool, base *string, quote *string, decimal *string, thousands *s
 		} else {return nil, errors.New("Pair not found")}
 	}
 
-	// Extract rate from element
-	rawRate := strings.Split(strings.Split(string(match[76:len(match)-50]), " ")[0], ".")
-
 	// Set format defaults if not given
-	if decimal == nil {decimal = new(string)}
-	if *decimal == "" {*decimal = "."}
-	if thousands == nil {thousands = new(string)}
+
+	if idecimal == nil {idecimal = new(string)}
+	if ithousands == nil {ithousands = new(string)}
+	if odecimal == nil {odecimal = new(string)}
+	if othousands == nil {othousands = new(string)}
+
+	if *idecimal == "" {
+		if *ithousands == "." {*idecimal = ","
+		} else {*idecimal = "."}
+	}
+	if *ithousands == "" {
+		if *idecimal == "," {*ithousands = "."
+		} else {*ithousands = ","}
+	}
+	if *odecimal == "" {*odecimal = *idecimal}
+
+	// Extract rate from element
+	rawRate := strings.Split(strings.Split(string(match[76:len(match)-50]), " ")[0], *idecimal)
 
 	// Format rate and return
-	rate := strings.ReplaceAll(rawRate[0], ",", *thousands)+*decimal+rawRate[1]
+	rate := strings.ReplaceAll(rawRate[0], *ithousands, *othousands)+*odecimal+rawRate[1]
 	return &rate, nil
 }
 
@@ -73,8 +87,10 @@ func httpHandle(response http.ResponseWriter, request *http.Request) {
 	// Get request queries
 	base := request.URL.Query().Get("base")
 	quote := request.URL.Query().Get("quote")
-	decimal := request.URL.Query().Get("decimal")
-	thousands := request.URL.Query().Get("thousands")
+	idecimal := request.URL.Query().Get("idecimal")
+	ithousands := request.URL.Query().Get("ithousands")
+	odecimal := request.URL.Query().Get("odecimal")
+	othousands := request.URL.Query().Get("othousands")
 
 	// Report error if base or quote not given
 	if base == "" || quote == "" {
@@ -83,7 +99,7 @@ func httpHandle(response http.ResponseWriter, request *http.Request) {
 	}	
 
 	// Query Google for rate
-	rate, err := query(true, &base, &quote, &decimal, &thousands)
+	rate, err := query(true, &base, &quote, &idecimal, &ithousands, &odecimal, &othousands)
 	if err != nil {
 		response.Write([]byte(err.Error()))
 		return
@@ -102,8 +118,10 @@ func main() {
 	var (
 		base *string
 		quote *string
-		decimal *string
-		thousands *string
+		idecimal *string
+		ithousands *string
+		odecimal *string
+		othousands *string
 		rest *string
 	)
 
@@ -123,17 +141,29 @@ func main() {
 					if len(os.Args) == i {help(1)}
 					quote = &os.Args[i]
 					continue
-				case "decimal":
+				case "idecimal":
 					i++
-					if decimal != nil {help(1)}
+					if idecimal != nil {help(1)}
 					if len(os.Args) == i {help(1)}
-					decimal = &os.Args[i]
+					idecimal = &os.Args[i]
 					continue
-				case "thousands":
+				case "ithousands":
 					i++
-					if thousands != nil {help(1)}
+					if ithousands != nil {help(1)}
 					if len(os.Args) == i {help(1)}
-					thousands = &os.Args[i]
+					ithousands = &os.Args[i]
+					continue
+				case "odecimal":
+					i++
+					if odecimal != nil {help(1)}
+					if len(os.Args) == i {help(1)}
+					odecimal = &os.Args[i]
+					continue
+				case "othousands":
+					i++
+					if othousands != nil {help(1)}
+					if len(os.Args) == i {help(1)}
+					othousands = &os.Args[i]
 					continue
 				case "rest":
 					i++
@@ -157,7 +187,7 @@ func main() {
 		if strings.HasPrefix(*rest, ":") && strings.Count(*rest, ":") == 1 {
 			restAddr = "localhost"+*rest
 		} else {restAddr = *rest}
-		os.Stdout.WriteString("Listening on "+restAddr+"\nExample: "+restAddr+"/api?base=eur&quote=usd&decimal=,&thousands=.\n")
+		os.Stdout.WriteString("Listening on "+restAddr+"\nExample: "+restAddr+"/api?base=eur&quote=usd&idecimal=.&ithousands=,&odecimal=,&othousands=.\n")
 
 		http.ListenAndServe(*rest, nil)
 		os.Exit(0)
@@ -166,7 +196,7 @@ func main() {
 	// Display help and exit if no base or quote given
 	if base == nil || quote == nil {help(2)
 	} else {
-		rate, err := query(false, base, quote, decimal, thousands)
+		rate, err := query(false, base, quote, idecimal, ithousands, odecimal, othousands)
 		if err != nil {
 			os.Stdout.WriteString(err.Error())
 			os.Exit(-1)

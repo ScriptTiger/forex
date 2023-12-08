@@ -9,13 +9,15 @@ Argument                  | Description
 --------------------------|-----------------------------------------------------------------------------------------------------
  `[-base] <base>`         | Base currency
  `[-quote] <quote>`       | Quote currency
- `-decimal <separator>`   | Decimal separator
- `-thousands <separator>` | Thousands seperator
+ `-idecimal <separator>`  | Input decimal separator
+ `-ithousands <separator>`| Input thousands seperator
+ `-odecimal <separator>`  | Output decimal separator
+ `-othousands <separator>`| Output thousands seperator
  `-rest <address:port>`   | Start REST API on given socket
 
 **This tool scrapes from a standard Google web search, and as such will get flagged as "unusual traffic" if it is used cyclically in rapid succession. The intent of this tool is for personal use only, to simply aid with certain one-off daily tasks, and should not be used in place of non-free Google API access.**
 
-If `decimal` and `thousands` separators are not defined, a dot (".") will be used for decimal separators and no thousands separator will be used.
+If `idecimal` and `ithousands` separators are not defined, a dot (".") will be assumed for decimal separators and a comma (",") will be assumed for thousands separators. If `odecimal` and `othousands` separators are not defined, a dot (".") will be used for decimal separators and no thousands separator will be used.
 
 If `rest` API is defined, all other arguments are ignored.
 
